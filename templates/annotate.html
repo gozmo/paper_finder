@@ -1,0 +1,27 @@
+{% extends "base.html" %} 
+
+{% block content %}
+
+<form action=/annotate method=get name=search>
+    <input type=text name=keywords id=keyowrds>
+    <input type=submit>
+</form>
+<table>
+{% for paper in papers %}
+    <form action="/annotate" method=post  name=annotate>
+        <tr>
+            <td>"{{paper["summary"]}}" </td> 
+            <input type=hidden id=paper_id value={{paper["id"]}} name=paper_id>
+            <td><p>
+                <input type=submit name=label id=label value=positive> </p></td>
+
+            <td><p> <input type=submit name=label value=negative>  </p></td>
+        </tr>
+    </form>
+
+{% endfor %}
+
+</table>
+{% block inner_content %}{% endblock %}
+
+{% endblock %}
