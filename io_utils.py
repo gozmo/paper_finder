@@ -5,12 +5,18 @@ from tqdm import tqdm
 
 from constants import Dir
 
-def write_latest_papers(papers):
-    os.makedirs(os.path.join("data", "latest"), exist_ok=True)
+def get_path(dir_name):
+    home_dir = os.getenv("HOME")
+    root_dir = os.path.join(home_dir, "Dropbox", "paper_finder")
+    if dir_name == unlabled:
+        return os.path.join(root_dir, "abstracts", "unlabeled")
+
+def write_new_papers(papers):
+    root_dir = get_root_dir()
+    target_dir = os.join.path(root_dir, "abstracts", "new")
 
     for paper in papers:
-        paper_id = os.path.join("data",
-                                "latest",
+        paper_id = os.path.join(target_dir
                                 paper["filename"] + ".json")
         json_content = json.dumps(paper)
         if not os.path.isfile(paper_id):
@@ -20,11 +26,12 @@ def write_latest_papers(papers):
 
 _unlabeled = []
 def read_unlabeled():
-    files = os.listdir("data/unlabeled")
+    unlabeled_dir = get_path("unlabeled")
+    files = os.listdir(unlabeled_dir)
 
     if len(_unlabeled) == 0:
         for paper_file in files:
-            filepath = os.path.join("data/unlabeled", paper_file)
+            filepath = os.path.join(unlabeled_dir, paper_file)
             with open(filepath, "r") as f:
                 paper_content = json.loads(f.read())
                 _unlabeled.append(paper_content)
@@ -32,17 +39,18 @@ def read_unlabeled():
 
     return _unlabeled
 
-def read_latest():
-    files = os.listdir("data/latest")
+def read_new():
+    new_dir = get_dir("new")
+    files = os.listdir(new_dir)
 
-    latest = list()
+    new = list()
     for paper_file in files:
-        filepath = os.path.join("data/latest", paper_file)
+        filepath = os.path.join(new_dir, paper_file)
         with open(filepath, "r") as f:
             paper_content = json.loads(f.read())
-            latest.append(paper_content)
+            new.append(paper_content)
 
-    return latest
+    return new
 
 def search_unlabeled(keyword_list):
     unlabeled = read_unlabeled()
@@ -54,11 +62,15 @@ def search_unlabeled(keyword_list):
                 search_hits.append(paper)
     return search_hits 
 
+def get_filepath(paper_id):
+    for dirname in ["new", "unlabeled", "positive", "negative", "unread", "read"]:
+        dirpath = get_dir(dirname)
+        files = [filename for filename in os.listdir(dirpath) if paper_id in filename]
+        if 0 < len(files):
+            return files[0]
 
-def move(source, paper_id, label):
+def move(paper_id, label):
     paper_id = paper_id.replace('/','_')
-    source_path = os.path.join("data", source, paper_id + ".json")
-    target_path = os.path.join(Dir.DATA, label, paper_id + ".json")
+    source_path = get_filepath(paper_id)
+    target_path = os.path.join(get_dir(label), paper_id + ".json")
     os.rename(source_path, target_path)
-
-
