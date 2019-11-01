@@ -137,11 +137,15 @@ class Bert:
         return padded_abstract
 
     def save(self):
-        torch.save(self.ffn_model, "ffn_model.pt")
-        torch.save(self.bert, "bert.pt")
+        models_path = get_path("models")
+        torch.save(self.ffn_model,
+                    os.path.join(models_path, "ffn_model.pt")
+        torch.save(self.bert,
+                    os.path.join(models_path, "bert.pt")
 
     def load(self):
-        self.ffn_model = torch.load("ffn_model.pt")
-        self.bert = torch.load("bert.pt")
+        models_path = get_path("models")
+        self.ffn_model = torch.load(os.path.join(models_path, "ffn_model.pt")
+        self.bert = torch.load(os.path.join(models_path, "bert.pt")
 
 

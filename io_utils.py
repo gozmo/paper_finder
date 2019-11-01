@@ -8,8 +8,18 @@ from constants import Dir
 def get_path(dir_name):
     home_dir = os.getenv("HOME")
     root_dir = os.path.join(home_dir, "Dropbox", "paper_finder")
-    if dir_name == unlabled:
+    if dir_name == "unlabeled":
         return os.path.join(root_dir, "abstracts", "unlabeled")
+    elif dir_name == "new":
+        return os.path.join(root_dir, "abstracts", "new")
+    elif dir_name == "read":
+        return os.path.join(root_dir, "abstracts", "read")
+    elif dir_name == "unread":
+        return os.path.join(root_dir, "abstracts", "unread")
+    elif dir_name == "negative":
+        return os.path.join(root_dir, "abstracts", "negative")
+    elif dir_name == "models":
+        return os.path.join(root_dir, "models")
 
 def write_new_papers(papers):
     root_dir = get_root_dir()
@@ -63,7 +73,7 @@ def search_unlabeled(keyword_list):
     return search_hits 
 
 def get_filepath(paper_id):
-    for dirname in ["new", "unlabeled", "positive", "negative", "unread", "read"]:
+    for dirname in ["new", "unlabeled", "negative", "unread", "read"]:
         dirpath = get_dir(dirname)
         files = [filename for filename in os.listdir(dirpath) if paper_id in filename]
         if 0 < len(files):
