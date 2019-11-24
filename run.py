@@ -6,15 +6,17 @@ from transformers import AdamW
 import torch
 from torch.nn import Module
 from torch import tensor
-from torch.nn import BCEWithLogitsLoss
+from torch.nn import BCELoss
 import time
 import pudb
 from tqdm import tqdm
+from io_utils import get_path
+import os
 
 class FeedForwardModel(Module):
     def __init__(self, max_length):
         super().__init__()
-        self.dense_1 = torch.nn.Linear( 768 * max_length, 1)
+        self.dense_1 = torch.nn.Linear(768, 1)
         self.sigmoid_1 = torch.nn.Sigmoid()
 
     def forward(self, x):
@@ -39,9 +41,20 @@ class Bert:
         batch = torch.stack(batch_list)
         return batch
 
-    def forward(self, x):
-        predictions, _ = self.bert(x)
-        output_1 = torch.reshape(predictions, [self.batch_size, 768*self.max_length])
+    def forward_xlm(self, x, attention_mask, langs):
+        xlm_output = self.pretrained_xlm(x, attention_mask=attention_mask, langs=langs)
+        xlm_output = xlm_output[0]
+        output_1 = torch.zeros((self.config.batch_size, 2*self.transformer_output_dim)).to(self.config.device)
+        for i in range(self.config.batch_size):
+            masked_output = xlm_output[i][attention_mask[i].nonzero(), :]
+            cls = masked_output[0][0]
+            output_1[i] = cls
+        return output_1
+
+
+    def forward(self, x, attention_mask, langs):
+        output_1 = self.forward_bert(x, attention_mask, langs)
+
         output_2 = self.ffn_model(output_1)
         return output_2
 
@@ -53,7 +66,7 @@ class Bert:
 
 
         optimizer = AdamW(self.ffn_model.parameters())
-        loss_function = BCEWithLogitsLoss(reduce="sum")
+        loss_function = BCELoss(reduce="sum")
 
         self.ffn_model.train()
         self.bert.train()
@@ -65,13 +78,14 @@ class Bert:
         self.ffn_model = self.ffn_model.to("cuda")
         self.bert = self.bert.to("cuda")
 
+        import pudb; pu.db
+
         previous_running_loss = 1.0
         for epoch in range(epochs):
-            epoch_start_time = time.time()
             running_loss = 0
             progress_bar = tqdm(total=batches)
 
-            for encoded_abstracts, targets in dataloader:
+            for encoded_abstracts, targets, attention_mask in dataloader:
                 encoded_abstracts = encoded_abstracts.to("cuda")
                 targets = targets.to("cuda")
 
@@ -93,20 +107,48 @@ class Bert:
 
             previous_running_loss = running_loss
 
-            epoch_time_elapsed = time.time() - epoch_start_time
-            print(f"Epoch time: {epoch_time_elapsed}, loss:{running_loss}")
 
     def collate_fn(self, elems):
-        abstracts = [elem[0] for elem in elems]
-        targets = [elem[1] for elem in elems]
-        tokenized_abstracts = [self.tokenizer.tokenize(abstract) for abstract in abstracts]
-        padded_abstracts = [self.pad(abstract) for abstract in tokenized_abstracts]
-        encoded_abstracts = [self.tokenizer.convert_tokens_to_ids(abstract) for abstract in padded_abstracts]
+        sentences = list(map(lambda x: x[0], elems))
+        targets = list(map(lambda x: x[1], elems))
 
-        x = torch.tensor(encoded_abstracts)
-        targets= torch.tensor([targets]).t()
+        tokenized_sentences = [self.tokenizer.tokenize(sentence) for sentence in sentences]
+        safe_tokenized_sentences = [self.cut_sentences(tokenized_sentence) for tokenized_sentence in tokenized_sentences]
 
-        return x, targets
+        encoded_sentences = [self.tokenizer.convert_tokens_to_ids(tokenized_sentence) for tokenized_sentence in safe_tokenized_sentences]
+        encoded_sentences_with_spec_tokens  = [self.tokenizer.add_special_tokens_single_sequence(encoded_sentence) for encoded_sentence in encoded_sentences]
+        padded_encoded_sentences = [self.pad_token_ids(encoded_sentence) for encoded_sentence in encoded_sentences_with_spec_tokens]
+
+        attention_mask = self.create_attention_mask(safe_tokenized_sentences)
+
+        return tensor(padded_encoded_sentences), tensor([targets]).t(), attention_mask 
+
+    def cut_sentences(self, tokenized_sentence):
+        sentence_length = len(tokenized_sentence)
+        if sentence_length  == 0:
+            return [self.tokenizer.unk_token]
+        elif self.config.max_length <= sentence_length + 2:
+            # -2 Offset is because <\s> and <\s> will be added
+            return tokenized_sentence[:self.config.max_length - 2]
+        else:
+            return tokenized_sentence
+
+    def pad_token_ids(self, token_ids):
+        if len(token_ids) < self.config.max_length:
+            pad_tokens = self.config.max_length - len(token_ids)
+            padding = [self.tokenizer.pad_token_id] * pad_tokens
+            padded_tokenized_sentence = token_ids + padding
+            return padded_tokenized_sentence
+        else:
+            return token_ids
+
+    def create_attention_mask(self, safe_tokenized_sentences):
+        sentence_lengths = list(map(lambda x: min(len(x), self.config.max_length), safe_tokenized_sentences))
+        attention_mask = torch.zeros(self.config.batch_size, self.config.max_length)
+        for i in range(self.config.batch_size):
+            length = sentence_lengths[i]
+            attention_mask[i][0:length] = 1
+        return attention_mask
 
     def classify(self, dataset):
         dataloader = DataLoader(dataset, batch_size=self.batch_size, collate_fn=self.collate_fn, drop_last=True)
@@ -138,14 +180,12 @@ class Bert:
 
     def save(self):
         models_path = get_path("models")
-        torch.save(self.ffn_model,
-                    os.path.join(models_path, "ffn_model.pt")
-        torch.save(self.bert,
-                    os.path.join(models_path, "bert.pt")
+        torch.save(self.ffn_model, os.path.join(models_path, "ffn_model.pt"))
+        torch.save(self.bert, os.path.join(models_path, "bert.pt"))
 
     def load(self):
         models_path = get_path("models")
-        self.ffn_model = torch.load(os.path.join(models_path, "ffn_model.pt")
-        self.bert = torch.load(os.path.join(models_path, "bert.pt")
+        self.ffn_model = torch.load(os.path.join(models_path, "ffn_model.pt"))
+        self.bert = torch.load(os.path.join(models_path, "bert.pt"))
 
 

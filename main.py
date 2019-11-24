@@ -54,7 +54,7 @@ def train():
 
     distilBert.train(dataset)
 
-    distilBert.save()
+    #distilBert.save()
 
     cache.reset("suggestions")
     cache.reset("latest")

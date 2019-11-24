@@ -3,14 +3,18 @@ import random
 import random
 import os
 from torch.utils.data import Dataset, DataLoader
+from pathlib import Path
 
-POSITIVE = "data/positive"
-NEGATIVE = "data/negative"
-UNLABELED = "data/unlabeled"
-LATEST = "data/latest"
+HOME = str(Path.home())
+READ = f"{HOME}/Dropbox/paper_finder/abstracts/read"
+UNREAD = f"{HOME}/Dropbox/paper_finder/abstracts/unread"
+NEGATIVE = f"{HOME}/Dropbox/paper_finder/abstracts/negative"
+UNLABELED = f"{HOME}/Dropbox/paper_finder/abstracts/unlabeled"
+LATEST = f"{HOME}/Dropbox/paper_finder/abstracts/new"
 
 
 def read_file(directory):
+    pu.db; pu.db
     jsons = []
     for dirpath, dirs, files in os.walk(directory):
         for filename in files:
@@ -32,7 +36,8 @@ class BaseDataset(Dataset):
 
 class TrainingDataset(BaseDataset):
     def __init__(self):
-        positives = read_file(POSITIVE)
+        import pudb ; pu.db
+        positives = read_file(READ)
         positives = zip(positives, [1.0]*len(positives))
 
         negatives = read_file(NEGATIVE)

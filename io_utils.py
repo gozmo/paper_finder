@@ -26,8 +26,7 @@ def write_new_papers(papers):
     target_dir = os.join.path(root_dir, "abstracts", "new")
 
     for paper in papers:
-        paper_id = os.path.join(target_dir
-                                paper["filename"] + ".json")
+        paper_id = os.path.join(target_dir, paper["filename"] + ".json")
         json_content = json.dumps(paper)
         if not os.path.isfile(paper_id):
             with open(paper_id, "w") as f:
