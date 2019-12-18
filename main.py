@@ -1,27 +1,45 @@
 from readers import arxiv
 from src.dataset import TrainingDataset
 from src.dataset import ClassificationDataset
-from src.dataset import LatestDataset 
-import io_utils
 from run import Bert
 from cache import cache
+from src import database
+from src.constants import Labels
+import pudb
+from tqdm import tqdm
+
+
+def latest_update():
+    # new_latest_papers = arxiv.read()
+
+    # old_latest_papers = database.get_latest_papers()
+    
+    # new_latest_papers = set(new_latest_papers)
+    # old_latest_papers = set(old_latest_papers)
+    
+    # new_papers = new_latest_papers.difference(old_latest_papers)
+    # phase_out = old_latest_papers.difference(new_latest_papers) 
+    latest_papers = database.get_latest_papers()
+    bert = Bert()
+    bert.load()
+    dataset = ClassificationDataset(latest_papers)
+
+    classifications = bert.classify(dataset)
+
+    for score, paper in zip(classifications, new_papers):
+        paper.score = score
+        # database.add(paper)
+        # database.add_paper_to_label(paper, Labels.LATEST)
+
+    # for paper in phase_out:
+        # database.update(paper.paper_id, Labels.LATEST, Labels.UNLABELED)
+    return
 
 def latest():
-    key = "latest"
-    if cache.is_empty(key):
-        papers = arxiv.read()
-        io_utils.write_latest_papers(papers)
+    latest = database.get_latest_papers()
+    for paper in latest[:10]:
+        print(paper.title)
 
-        distilBert = Bert()
-        distilBert.load()
-        dataset = LatestDataset()
-
-        classifications = distilBert.classify(dataset)
-        classifications = sorted(enumerate(classifications), key=lambda x: x[1], reverse=True)
-        suggested_papers = list(map(lambda x: dataset.get_paper(x[0]), classifications))
-        cache.set(key, suggested_papers)
-
-    return cache.get(key)
 
 def read_unlabeled():
     key = "unlabel"

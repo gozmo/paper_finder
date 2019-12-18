@@ -1,6 +1,7 @@
 import pudb
 import feedparser
 import urllib
+from src.paper import Paper
 
 def read():
     rss_feed_ids = ["cs", "stat"]
@@ -17,11 +18,8 @@ def read():
             summary = item.summary
             link = item.link
             temp = urllib.parse.urlparse(link)
-            filename = temp.path.replace("/abs/","")
-            paper = {"title": title,
-                     "summary": summary,
-                     "filename": filename,
-                     "id": filename,
-                     "link": link}
+            paper_id = temp.path.replace("/abs/","")
+            paper = Paper(title, summary, 0.0, paper_id, link)
+
             papers.append(paper)
     return papers

@@ -1,4 +1,6 @@
 from src.dataset import Dataset
+from src.constants import Paths
+from src.constants import DEVICE
 from torch.utils.data import DataLoader
 from transformers import BertModel
 from transformers import BertTokenizer
@@ -10,7 +12,6 @@ from torch.nn import BCELoss
 import time
 import pudb
 from tqdm import tqdm
-from io_utils import get_path
 import os
 
 class FeedForwardModel(Module):
@@ -75,10 +76,9 @@ class Bert:
 
         epochs = 10
         batches = int(len(dataset) / self.batch_size)
-        self.ffn_model = self.ffn_model.to("cuda")
-        self.bert = self.bert.to("cuda")
+        self.ffn_model = self.ffn_model.to(DEVICE)
+        self.bert = self.bert.to(DEVICE)
 
-        import pudb; pu.db
 
         previous_running_loss = 1.0
         for epoch in range(epochs):
@@ -86,8 +86,8 @@ class Bert:
             progress_bar = tqdm(total=batches)
 
             for encoded_abstracts, targets, attention_mask in dataloader:
-                encoded_abstracts = encoded_abstracts.to("cuda")
-                targets = targets.to("cuda")
+                encoded_abstracts = encoded_abstracts.to(DEVICE)
+                targets = targets.to(DEVICE)
 
 
                 # # zero the parameter gradients
@@ -156,12 +156,12 @@ class Bert:
         batches = int(len(dataset) / self.batch_size)
         progress_bar = tqdm(total=batches, desc="classifying")
 
-        self.ffn_model = self.ffn_model.to("cuda")
-        self.bert = self.bert.to("cuda")
+        self.ffn_model = self.ffn_model.to(DEVICE)
+        self.bert = self.bert.to(DEVICE)
 
         outputs = []
         for encoded_abstracts, targets in dataloader:
-            encoded_abstracts = encoded_abstracts.to("cuda")
+            encoded_abstracts = encoded_abstracts.to(DEVICE)
 
             output = self.forward(encoded_abstracts)
             outputs.extend(output.tolist())
@@ -179,13 +179,11 @@ class Bert:
         return padded_abstract
 
     def save(self):
-        models_path = get_path("models")
         torch.save(self.ffn_model, os.path.join(models_path, "ffn_model.pt"))
         torch.save(self.bert, os.path.join(models_path, "bert.pt"))
 
     def load(self):
-        models_path = get_path("models")
-        self.ffn_model = torch.load(os.path.join(models_path, "ffn_model.pt"))
-        self.bert = torch.load(os.path.join(models_path, "bert.pt"))
+        self.ffn_model = torch.load(Paths.FFN_MODEL)
+        self.bert = torch.load(Paths.BERT_MODEL)
 
 
