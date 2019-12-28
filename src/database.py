@@ -1,38 +1,41 @@
 from src.constants import Paths
 from src.constants import Labels
-from src.io_utils import write_abstract
-from src.io_utils import append_label
-from src.io_utils import read_paper
-from src.io_utils import read_label_ids 
+import src.io_utils as io_utils
 
 def add(paper):
-    write_abstract(paper)
+    io_utils.write_abstract(paper)
 
 def add_paper_to_label(paper, label):
-    append_label(label, paper)
+    io_utils.append_label(label, paper)
 
-def move(paper_id, source_label, target_label):
-    source_label_ids = io_utils.read_label_ids(source_label)
-    target_label_ids = io_utils.read_label_ids(target_label)
-
-
-def get_label(label):
-    return io_utils.read_label_ids(source_label)
-
-def get_abstract(paper_id):
-    return io_utils.read_paper(paper_id)
-
-def get_unread_papers():
-    unread_paper_ids= io_utils.read_label_ids(Labels.UNREAD)
-    unread_papers = [io_utils.read_paper(paper_id) for paper_id in unread_paper_ids]
-    return unread_papers
-
-def get_read_papers():
-    read_paper_ids= io_utils.read_label_ids(Labels.READ)
-    read_papers = [io_utils.read_paper(paper_id) for paper_id in read_paper_ids]
-    return read_papers
+def get_ids_from_label(label):
+    label_ids = io_utils.read_label_ids(label)
+    return label_ids
 
 def get_latest_papers():
-    latest_paper_ids= read_label_ids(Labels.LATEST)
-    latest_papers = [read_paper(paper_list_elem["paper_id"]) for paper_list_elem in latest_paper_ids]
+    latest_paper_ids= io_utils.read_label_ids(Labels.LATEST)
+    latest_papers = [io_utils.read_paper(paper_list_elem["paper_id"]) for paper_list_elem in latest_paper_ids]
     return latest_papers
+
+def update(paper, source_label, target_label):
+    io_utils.append_label(target_label, paper)
+    io_utils.remove_from_label(source_label, paper)
+
+def all_abstracts():
+    abstract_files_ids = io_utils.list_all_abstract_ids()
+    papers = [io_utils.read_paper(abstract_id) for abstract_id in abstract_files_ids]
+    return papers
+
+def read_paper(paper_id):
+    return io_utils.read_paper(paper_id)
+
+def update_paper_label(paper, label):
+    if label == Labels.NEGATIVE or label == Labels.UNREAD:
+        io_utils.remove_from_label(Labels.UNLABELED, paper)
+        io_utils.remove_from_label(Labels.LATEST, paper)
+    elif label == Labels.READ:
+        io_utils.remove_from_label(Labels.UNREAD, paper)
+        io_utils.remove_from_label(Labels.UNLABELED, paper)
+        io_utils.remove_from_label(Labels.LATEST, paper)
+    io_utils.append_label(label, paper)
+

@@ -4,6 +4,7 @@ import urllib
 from src.paper import Paper
 
 def read():
+    pu.db
     rss_feed_ids = ["cs", "stat"]
     base_url = "http://export.arxiv.org/rss/"
 
@@ -19,7 +20,8 @@ def read():
             link = item.link
             temp = urllib.parse.urlparse(link)
             paper_id = temp.path.replace("/abs/","")
-            paper = Paper(title, summary, 0.0, paper_id, link)
+            paper_url = temp.path.replace("/abs/","/pdf/")
+            paper = Paper(title, summary, 0.0, paper_id, link, paper_url)
 
             papers.append(paper)
     return papers

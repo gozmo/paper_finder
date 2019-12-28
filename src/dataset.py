@@ -35,9 +35,9 @@ class TrainingDataset(BaseDataset):
 
 class ClassificationDataset(BaseDataset):
     def __init__(self, papers):
-        BaseDataset.__init__(self, dataset)
+        BaseDataset.__init__(self, papers)
 
     def __getitem__(self, idx):
-        text = self.data[idx]["summary"]
+        text = self.papers[idx].summary
         return text, 0.0
 

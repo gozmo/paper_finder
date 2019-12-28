@@ -9,10 +9,10 @@ class Labels:
 
 class Paths:
     HOME = str(Path.home())
-    READ = f"{HOME}/Dropbox/paper_finder/read.txt"
-    UNREAD = f"{HOME}/Dropbox/paper_finder/unread.txt"
-    NEGATIVE = f"{HOME}/Dropbox/paper_finder/negative.txt"
-    UNLABELED = f"{HOME}/Dropbox/paper_finder/unlabeled.txt"
+    READ = f"{HOME}/Dropbox/paper_finder/read.json"
+    UNREAD = f"{HOME}/Dropbox/paper_finder/unread.json"
+    NEGATIVE = f"{HOME}/Dropbox/paper_finder/negative.json"
+    UNLABELED = f"{HOME}/Dropbox/paper_finder/unlabeled.json"
     LATEST = f"{HOME}/Dropbox/paper_finder/latest.json"
 
     ABSTRACTS = f"{HOME}/Dropbox/paper_finder/abstracts/"
