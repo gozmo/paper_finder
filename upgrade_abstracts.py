@@ -15,6 +15,8 @@ for abstract_file in files:
         paper = json.load(f)
     if "nips" in abstract_file:
         paper["pdf_link"] = paper["link"] + ".pdf"
+        if "nips" not in paper["paper_id"]:
+            paper["paper_id"] = "nips-" + paper["paper_id"] 
     else:
         paper["pdf_link"] = paper["link"].replace("abs","pdf")
 
@@ -23,6 +25,9 @@ for abstract_file in files:
         del paper["paper_link"]
     if "filename" in paper:
         del paper["filename"]
+    if "pdf_url" in paper:
+        paper["pdf_link"] = paper["pdf_url"]
+        del paper["pdf_url"]
 
     if "id" in paper:
         paper["paper_id"] = paper["id"]

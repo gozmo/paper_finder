@@ -1,5 +1,6 @@
 from pathlib import Path
 
+
 class Labels: 
     UNREAD = "unread"
     READ = "read"
@@ -17,10 +18,13 @@ class Paths:
 
     ABSTRACTS = f"{HOME}/Dropbox/paper_finder/abstracts/"
 
-    PDFS_READ= f"{HOME}/Dropbox/paper_finder/pdfs/read"
-    PDFS_UNREAD= f"{HOME}/Dropbox/paper_finder/pdfs/unread"
+    PDF_READ= f"{HOME}/Dropbox/paper_finder/pdfs/read"
+    PDF_UNREAD= f"{HOME}/Dropbox/paper_finder/pdfs/unread"
 
     BERT_MODEL = f"{HOME}/Dropbox/paper_finder/models/bert.pt"
     FFN_MODEL = f"{HOME}/Dropbox/paper_finder/models/ffn_model.pt"
+
+    CACHE = f"{HOME}/Dropbox/paper_finder/cache.json"
+
 
 DEVICE = "cpu"

@@ -1,13 +1,11 @@
 from collections import defaultdict
+from src import io_utils
 
 class Cache:
-    def __init__(self):
-        self.__cache = defaultdict(dict)
-
     def set(self, key, papers):
-        self.__cache[key] = papers
+        io_utils.cache_write(key, papers)
 
     def get(self, key):
-        return self.__cache[key]
+        return io_utils.cache_read(key)
 
 cache = Cache()

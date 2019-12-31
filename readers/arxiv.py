@@ -4,7 +4,6 @@ import urllib
 from src.paper import Paper
 
 def read():
-    pu.db
     rss_feed_ids = ["cs", "stat"]
     base_url = "http://export.arxiv.org/rss/"
 

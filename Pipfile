@@ -12,6 +12,8 @@ numpy = "*"
 feedparser = "*"
 jsonlines = "*"
 bs4 = "*"
+scikit-learn = "*"
+spacy = "*"
 
 [dev-packages]
 

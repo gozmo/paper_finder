@@ -8,7 +8,7 @@ class Paper:
         self.pdf_link = pdf_link
 
     def __str__(self):
-        return f"{self.paper_id}, {self.title}"
+        return f"Paper<{self.paper_id}, {self.title}>"
 
     def __repr__(self):
         return self.__str__()
@@ -26,8 +26,3 @@ class Paper:
                 "paper_id": self.paper_id,
                 "pdf_link": self.pdf_link,
                 "link": self.link}
-
-    def to_list_elem(self):
-        return {"paper_id": self.paper_id,
-                "score": self.score}
-

@@ -4,6 +4,8 @@ import random
 import os
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
+from src import database
+from src.constants import Labels
 
 class BaseDataset(Dataset):
     def __init__(self, papers):
@@ -17,19 +19,20 @@ class BaseDataset(Dataset):
 
 class TrainingDataset(BaseDataset):
     def __init__(self):
-        positives = read_file(READ)
+        read = database.get_papers_of_label(Labels.READ)
+        unread = database.get_papers_of_label(Labels.UNREAD)
+        positives = read + unread
         positives = zip(positives, [1.0]*len(positives))
 
-        negatives = read_file(NEGATIVE)
+        negatives = database.get_papers_of_label(Labels.NEGATIVE)
         negatives = zip(negatives, [0.0]*len(negatives))
 
-        dataset = list(positives) + list(negatives)
-        random.shuffle(dataset)
-        BaseDataset.__init__(self, dataset)
+        papers = list(positives) + list(negatives)
+        BaseDataset.__init__(self, papers)
 
     def __getitem__(self, idx):
-        text = self.data[idx][0]["summary"]
-        label = self.data[idx][1]
+        text = self.papers[idx][0].summary
+        label = self.papers[idx][1]
 
         return text, label
 

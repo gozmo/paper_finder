@@ -7,6 +7,24 @@ from src.constants import Paths
 from src.constants import Labels
 from src.paper import Paper
 
+def cache_read(key):
+    with open(Paths.CACHE, "r") as f:
+        cache_content = json.load(f)
+    if key in cache_content:
+        return [Paper(**json_paper) for json_paper in cache_content[key]]
+    else: 
+        return []
+
+def cache_write(key, papers):
+    with open(Paths.CACHE, "r") as f:
+        cache_content = json.load(f)
+
+    cache_content[key] = [paper.to_dict() for paper in papers]
+
+    with open(Paths.CACHE, "w") as f:
+        json.dump(cache_content, f)
+    return
+
 def dir_check(dirpath):
     if not os.path.isdir(dirpath):
         os.makedirs(dirpath)
@@ -38,9 +56,6 @@ def read_paper(paper_id):
 def read_label_ids(label):
     target = get_label_path(label)
 
-    if os.stat(target).st_size < 5:
-        return []
-    
     with open(target) as f:
         json_content = json.load(f)
 
@@ -52,22 +67,17 @@ def write_label_ids(label, content):
     with open(target, "w") as f:
         json.dump(content, f)
 
-def append_label(label, paper):
+def add_to_label(label, paper):
     content = read_label_ids(label)
-
-    content = set(content)
-    content.add(paper.to_list_elem())
-    content = list(content)
-
+    content.append(paper.paper_id)
     write_label_ids(label, content)
 
 def remove_from_label(label, paper):
     content = read_label_ids(label)
-    content = [elem for elem in content if elem["paper_id"] != paper.paper_id]
+    content = [paper_id for paper_id in content if paper_id != paper.paper_id]
     write_label_ids(label, content)
 
-
-def write_abstract(paper):
+def write_paper(paper):
     dir_check(Paths.ABSTRACTS)
 
     paper_path = os.path.join(Paths.ABSTRACTS, paper.paper_id + ".json")
@@ -88,5 +98,3 @@ def search(keyword_list):
                 search_hits.append(paper)
     return search_hits 
 
-def move(paper_id, label):
-    pass
