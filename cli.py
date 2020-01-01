@@ -13,6 +13,7 @@ def setup_annotation(subparser):
     subparser.add_argument("--download", type=int, nargs="+",metavar="N")
     subparser.add_argument("--read", type=int, nargs="+",metavar="N")
     subparser.add_argument("--unread", type=int, nargs="+",metavar="N")
+    subparser.add_argument("--n", type=int, default=10)
 
 def annotate(args):
     return args.negative or args.positive or args.show or args.negative or args.read or args.unread
@@ -74,10 +75,10 @@ if args.cmd == "latest":
         handle_annotate(args)
     elif args.update:
         latest_papers = main.latest_update()
-        display_papers(latest_papers, 10)
+        display_papers(latest_papers, args.n)
     else:
         latest_papers = main.latest()
-        display_papers(latest_papers, 10)
+        display_papers(latest_papers, args.n)
 
 elif args.cmd == "train":
     main.train()
@@ -88,27 +89,27 @@ elif args.cmd == "search":
     elif args.keywords and 0 < len(args.keywords):
         keywords = args.keywords
         search_hits = main.search_keywords(keywords)
-        display_papers(search_hits,10)
+        display_papers(search_hits, args.n)
     else:
         search_hits = main.search_hits()
-        display_papers(search_hits, 10)
+        display_papers(search_hits, args.n)
 
 elif args.cmd == "sync":
     if annotate(args):
         handle_annotate(args)
     else:
         new_papers = main.sync_command()
-        display_papers(new_papers, 10)
+        display_papers(new_papers, args.n)
 
 elif args.cmd == "suggestions":
     if annotate(args):
         handle_annotate(args)
     elif args.generate:
         suggestions = main.generate_suggestions()
-        display_papers(suggestions, 10)
+        display_papers(suggestions, args.n)
     else:
         suggestions = main.suggestions()
-        display_papers(suggestions, 10)
+        display_papers(suggestions, args.n)
 
 elif args.cmd == "read":
     if annotate(args):

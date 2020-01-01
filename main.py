@@ -79,6 +79,7 @@ def train():
     dataset = TrainingDataset()
 
     bert = Bert()
+    bert.load()
     bert.train(dataset)
     bert.save()
 
