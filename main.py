@@ -14,25 +14,26 @@ from src.sync import sync_abstracts
 
 def get_papers(paper_source):
     if paper_source== "latest":
-        papers = latest()
+        papers = show_latest()
     elif paper_source == "search":
         papers = cache.get("search")
     elif paper_source == "sync":
         papers = cache.get("sync")
     elif paper_source == "suggestions":
-        papers = suggestions()
+        papers = show_suggestions()
     elif paper_source == "read":
-        papers = read()
+        papers = show_read()
     elif paper_source == "unread":
-        papers = unread()
+        papers = show_unread()
     elif paper_source == "negative":
-        papers = negative()
+        papers = show_negative()
     else:
         raise Exception("Paper source not supported")
     return papers 
 
 def latest_update():
     latest_papers = arxiv.read()
+    latest_papers = list(set(latest_papers))
     
     bert = Bert()
     bert.load()
@@ -48,8 +49,9 @@ def latest_update():
     latest_papers = sorted(latest_papers , key= lambda x: x.score, reverse=True)
     return latest_papers
 
-def latest():
+def show_latest():
     latest = database.get_papers_of_label(Labels.LATEST)
+    latest = list(set(latest))
     latest = sorted(latest , key= lambda x: x.score, reverse=True)
     return latest
 
@@ -97,7 +99,7 @@ def generate_suggestions():
     unlabeled_papers = sorted(unlabeled_papers, key=lambda x:x.score, reverse=True)
     return unlabeled_papers
 
-def suggestions():
+def show_suggestions():
     suggested_papers = database.get_papers_of_label(Labels.UNLABELED)
     suggested_papers = sorted(suggested_papers, key= lambda x: x.score, reverse=True)
     return suggested_papers
@@ -117,18 +119,20 @@ def sync_command():
     cache.set("sync", sync_papers)
     return sync_papers
 
-def read():
+def show_read():
     read_papers = database.get_papers_of_label(Labels.READ)
     read_papers = sorted(read_papers, key= lambda x: x.score, reverse=True)
     return read_papers
 
-def unread():
+def show_unread():
     unread_papers = database.get_papers_of_label(Labels.UNREAD)
     unread_papers = sorted(unread_papers, key= lambda x: x.score, reverse=True)
     return unread_papers
 
-def negative():
+def show_negative():
     negative_papers = database.get_papers_of_label(Labels.NEGATIVE)
     negative_papers = sorted(negative_papers, key= lambda x: x.score, reverse=True)
     return negative_papers
 
+def notes():
+    pass

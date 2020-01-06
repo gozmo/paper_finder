@@ -52,4 +52,5 @@ def read():
             paper = Paper(title, summary, 0.0, paper_id, link, paper_url)
 
             papers.append(paper)
+        papers = list(set(papers))
     return papers

@@ -43,10 +43,11 @@ class Bert:
         return batch
 
     def forward_bert(self, x, attention_mask):
+        batch_size = x.shape[0]
         bert_output = self.bert(x, attention_mask=attention_mask)
         bert_output = bert_output[0]
-        output_1 = torch.zeros((self.batch_size, 768)).to(DEVICE)
-        for i in range(self.batch_size):
+        output_1 = torch.zeros((batch_size, 768)).to(DEVICE)
+        for i in range(batch_size):
             masked_output = bert_output[i][attention_mask[i].nonzero(), :]
             cls = masked_output[0][0]
             output_1[i] = cls
@@ -72,7 +73,7 @@ class Bert:
         self.ffn_model.train()
         self.bert.train()
 
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, collate_fn=self.collate_fn, drop_last=True)
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, collate_fn=self.collate_fn, drop_last=False)
 
         epochs = 10
         batches = int(len(dataset) / self.batch_size)
@@ -102,11 +103,25 @@ class Bert:
                 running_loss += loss.item()
                 progress_bar.update(1)
 
-            if running_loss == previous_running_loss:
+            progress_bar.set_description(f"Loss: {running_loss}")
+            if abs(running_loss - previous_running_loss) < 0.05 or running_loss > previous_running_loss:
                 break
 
             previous_running_loss = running_loss
 
+        threshold = self.optimize_threshold(dataset)
+
+    def optimize_threshold(self, dataset):
+        classifications = self.__classify(dataset)
+
+        y_true = [y for x,y in dataset]
+        scores = []
+        for threshold in np.arange(0.0, 1.0, 0.01):
+            y_pred = [(1 if threshold < score[0] else 0) for score in classifications]
+            f1_score = sklearn.metrics.f1_score(y_true, y_pred)
+            scores.append( (f1_score, threshold) )
+        scores = sorted(scores)
+        return scores[0][1]
 
     def collate_fn(self, elems):
         sentences = list(map(lambda x: x[0], elems))
@@ -143,29 +158,29 @@ class Bert:
 
     def create_attention_mask(self, safe_tokenized_sentences):
         sentence_lengths = list(map(lambda x: min(len(x), self.max_length), safe_tokenized_sentences))
-        attention_mask = torch.zeros(self.batch_size, self.max_length)
-        for i in range(self.batch_size):
+        batch_size = len(sentence_lengths)
+        attention_mask = torch.zeros(batch_size, self.max_length)
+        for i in range(batch_size):
             length = sentence_lengths[i]
             attention_mask[i][0:length] = 1
         return attention_mask
 
     def classify(self, dataset):
-        dataloader = DataLoader(dataset, batch_size=self.batch_size, collate_fn=self.collate_fn, drop_last=True)
-
-        batches = int(len(dataset) / self.batch_size)
-        progress_bar = tqdm(total=batches, desc="classifying")
 
         self.ffn_model = self.ffn_model.to(DEVICE)
         self.bert = self.bert.to(DEVICE)
 
+        return self.__classify(dataset)
+
+    def __classify(self, dataset):
+        dataloader = DataLoader(dataset, batch_size=self.batch_size, collate_fn=self.collate_fn, drop_last=False)
+
         outputs = []
-        for encoded_abstracts, targets, attention_mask in dataloader:
+        for encoded_abstracts, targets, attention_mask in tqdm(dataloader, desc="classifying"):
             encoded_abstracts = encoded_abstracts.to(DEVICE)
 
             output = self.forward(encoded_abstracts, attention_mask)
             outputs.extend(output.tolist())
-
-            progress_bar.update(1)
 
         return outputs
 

@@ -1,10 +1,18 @@
 import argparse
 import main
 from src.constants import Labels
+from colorama import Fore,Style
 
 def display_papers(papers, num):
     for i, paper in enumerate(papers[:num]):
-        print(f"[{i}] {paper.score}, {paper.title}")
+        if paper.score < 0.3:
+            color = Fore.RED
+        elif paper.score < 0.5:
+            color = Fore.YELLOW
+        else:
+            color = Fore.GREEN
+        score_str = f"{color} {paper.score} {Style.RESET_ALL}"
+        print(f"[{i}] {score_str}, {paper.title}")
 
 def setup_annotation(subparser):
     subparser.add_argument("--negative", type=int, nargs="+",metavar="N")
@@ -14,6 +22,7 @@ def setup_annotation(subparser):
     subparser.add_argument("--read", type=int, nargs="+",metavar="N")
     subparser.add_argument("--unread", type=int, nargs="+",metavar="N")
     subparser.add_argument("--n", type=int, default=10)
+    subparser.add_argument("--notes", type=int)
 
 def annotate(args):
     return args.negative or args.positive or args.show or args.negative or args.read or args.unread
@@ -77,7 +86,7 @@ if args.cmd == "latest":
         latest_papers = main.latest_update()
         display_papers(latest_papers, args.n)
     else:
-        latest_papers = main.latest()
+        latest_papers = main.show_latest()
         display_papers(latest_papers, args.n)
 
 elif args.cmd == "train":
@@ -108,25 +117,25 @@ elif args.cmd == "suggestions":
         suggestions = main.generate_suggestions()
         display_papers(suggestions, args.n)
     else:
-        suggestions = main.suggestions()
+        suggestions = main.show_suggestions()
         display_papers(suggestions, args.n)
 
 elif args.cmd == "read":
     if annotate(args):
         handle_annotate(args)
     else:
-        read = main.read()
+        read = main.show_read()
         display_papers(read, 40)
 elif args.cmd == "unread":
     if annotate(args):
         handle_annotate(args)
     else:
-        unread = main.unread()
+        unread = main.show_unread()
         display_papers(unread, 40)
 
 elif args.cmd == "negative":
     if annotate(args):
         handle_annotate(args)
     else:
-        negative = main.negative()
+        negative = main.show_negative()
         display_papers(negative, 20)

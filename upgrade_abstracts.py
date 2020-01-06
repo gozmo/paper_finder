@@ -20,7 +20,8 @@ for abstract_file in files:
     else:
         paper["pdf_link"] = paper["link"].replace("abs","pdf")
 
-    paper["score"] = 0.0
+    if "score" not in paper:
+        paper["score"] = 0.0
     if "paper_link" in paper:
         del paper["paper_link"]
     if "filename" in paper:
