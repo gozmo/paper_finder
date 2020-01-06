@@ -24,7 +24,6 @@ def sync_label(label, pdf_path):
     return new_papers
 
 def sync_pdfs():
-    pu.db
     unread_papers = sync_label(Labels.UNREAD, Paths.PDF_UNREAD)
     read_papers = sync_label(Labels.READ, Paths.PDF_READ)
     return unread_papers + read_papers
