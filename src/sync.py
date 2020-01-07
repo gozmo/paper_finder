@@ -20,6 +20,8 @@ def sync_label(label, pdf_path):
             database.add(paper)
             database.add_paper_to_label(paper, label)
             new_papers.append(paper)
+        else:
+            print("Pdf skipped: ", new_id)
 
     return new_papers
 
